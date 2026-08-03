@@ -17,7 +17,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from monarch_summary import credentials
+from monarch_summary import credentials, notifications
 from monarch_summary.monarch_client import fetch_transactions
 from monarch_summary.pipeline import SyncOutcome, sync_from_csv, sync_from_transactions
 
@@ -31,6 +31,14 @@ st.title("Monarch Account Summary")
 def default_workbook_path() -> str:
     matches = glob.glob("expense_data/input/*.xlsx")
     return matches[0] if len(matches) == 1 else ""
+
+
+def _try_notify_failure(error: Exception) -> None:
+    try:
+        notifications.send_sync_failure_email(error)
+        st.info("Failure alert emailed.")
+    except notifications.NotificationError as e:
+        st.warning(f"Could not send failure email: {e}")
 
 
 def render_results(outcome: SyncOutcome) -> None:
@@ -134,6 +142,73 @@ with st.expander("⚙️ Settings — Monarch credentials", expanded=not has_cre
         except credentials.CredentialStoreUnavailable as e:
             st.error(str(e))
 
+try:
+    has_gmail_creds = credentials.has_gmail_credentials()
+    gmail_creds_error: str | None = None
+except credentials.CredentialStoreUnavailable as e:
+    has_gmail_creds = False
+    gmail_creds_error = str(e)
+
+with st.expander("⚙️ Settings — Email alerts (Gmail)", expanded=False):
+    st.caption(
+        "Sent via Gmail SMTP using an app password (not your regular Gmail "
+        "password) -- generate one at https://myaccount.google.com/apppasswords. "
+        "Stored in the same OS credential store as Monarch credentials."
+    )
+    if gmail_creds_error:
+        st.error(gmail_creds_error)
+    else:
+        st.write("✅ Gmail credentials saved" if has_gmail_creds else "No Gmail credentials saved yet.")
+
+    with st.form("gmail_credentials_form"):
+        gmail_default = (credentials.get_secret(credentials.KEY_GMAIL_ADDRESS) or "") if not gmail_creds_error else ""
+        recipient_default = (credentials.get_secret(credentials.KEY_ALERT_RECIPIENT) or "") if not gmail_creds_error else ""
+        gmail_address = st.text_input("Gmail address", value=gmail_default)
+        gmail_app_password = st.text_input(
+            "Gmail app password", type="password",
+            help="Leave blank to keep the currently saved app password.",
+        )
+        alert_recipient = st.text_input(
+            "Alert recipient (optional)", value=recipient_default,
+            help="Where alerts are sent. Leave blank to send to the Gmail address itself.",
+        )
+        gmail_save_col, gmail_clear_col = st.columns(2)
+        gmail_save_clicked = gmail_save_col.form_submit_button("Save")
+        gmail_clear_clicked = gmail_clear_col.form_submit_button("Clear stored credentials")
+
+    if gmail_save_clicked:
+        try:
+            if gmail_address:
+                credentials.set_secret(credentials.KEY_GMAIL_ADDRESS, gmail_address)
+            if gmail_app_password:
+                credentials.set_secret(credentials.KEY_GMAIL_APP_PASSWORD, gmail_app_password)
+            if alert_recipient:
+                credentials.set_secret(credentials.KEY_ALERT_RECIPIENT, alert_recipient)
+            st.success("Saved. Re-open this section to confirm.")
+        except credentials.CredentialStoreUnavailable as e:
+            st.error(str(e))
+
+    if gmail_clear_clicked:
+        try:
+            for key in (
+                credentials.KEY_GMAIL_ADDRESS,
+                credentials.KEY_GMAIL_APP_PASSWORD,
+                credentials.KEY_ALERT_RECIPIENT,
+            ):
+                credentials.delete_secret(key)
+            st.success("Cleared.")
+        except credentials.CredentialStoreUnavailable as e:
+            st.error(str(e))
+
+    if st.button("Send test email"):
+        try:
+            notifications.send_test_email()
+            st.success("Test email sent -- check your inbox.")
+        except notifications.NotificationError as e:
+            st.error(str(e))
+        except Exception as e:  # noqa: BLE001 -- surface raw SMTP errors (auth, network) as-is
+            st.error(f"Failed to send test email: {e}")
+
 st.header("Sync")
 
 workbook_path = st.text_input("Workbook path (.xlsx)", value=default_workbook_path())
@@ -151,6 +226,13 @@ if source_mode == "Upload a CSV export":
     uploaded_file = st.file_uploader("Monarch transactions CSV export", type="csv")
 elif not has_creds:
     st.info("No Monarch credentials saved yet -- fill in Settings above, or switch to CSV upload.")
+
+email_results = st.checkbox(
+    "📧 Email me the results",
+    value=False,
+    disabled=not has_gmail_creds,
+    help="Save Gmail credentials in Settings above to enable this." if not has_gmail_creds else None,
+)
 
 if st.button("🔄 Sync Now", type="primary"):
     if not workbook_path:
@@ -181,11 +263,21 @@ if st.button("🔄 Sync Now", type="primary"):
                     )
             except (FileNotFoundError, ValueError, credentials.CredentialStoreUnavailable) as e:
                 st.error(f"Sync failed: {e}")
+                if email_results:
+                    _try_notify_failure(e)
             except Exception as e:  # noqa: BLE001 -- live Monarch connector is unverified
                 st.error(
                     "Sync failed with an unexpected error. The live Monarch connector "
                     f"is unverified and this may be a gap in it: {e}"
                 )
+                if email_results:
+                    _try_notify_failure(e)
 
         if outcome is not None:
             render_results(outcome)
+            if email_results:
+                try:
+                    notifications.send_sync_success_email(outcome)
+                    st.success("Summary emailed.")
+                except notifications.NotificationError as e:
+                    st.warning(f"Could not send summary email: {e}")

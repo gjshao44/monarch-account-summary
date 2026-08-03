@@ -17,6 +17,10 @@ KEY_MONARCH_EMAIL = "monarch_email"
 KEY_MONARCH_PASSWORD = "monarch_password"
 KEY_MONARCH_MFA_SECRET = "monarch_mfa_secret"
 
+KEY_GMAIL_ADDRESS = "gmail_address"
+KEY_GMAIL_APP_PASSWORD = "gmail_app_password"
+KEY_ALERT_RECIPIENT = "alert_recipient_email"
+
 
 class CredentialStoreUnavailable(RuntimeError):
     """Raised when the OS has no usable credential store backend."""
@@ -54,3 +58,7 @@ def delete_secret(key: str) -> None:
 
 def has_monarch_credentials() -> bool:
     return bool(get_secret(KEY_MONARCH_EMAIL)) and bool(get_secret(KEY_MONARCH_PASSWORD))
+
+
+def has_gmail_credentials() -> bool:
+    return bool(get_secret(KEY_GMAIL_ADDRESS)) and bool(get_secret(KEY_GMAIL_APP_PASSWORD))

@@ -3,6 +3,9 @@ expense_data/
 config/owners.local.yaml
 .env
 
+# Monarch live-connector session cache — holds an auth token
+.mm/
+
 # Python
 .venv/
 venv/

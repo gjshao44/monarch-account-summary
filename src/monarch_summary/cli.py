@@ -6,6 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from monarch_summary import notifications
 from monarch_summary.pipeline import SyncOutcome, sync_from_csv
 
 DEFAULT_OWNERS_CONFIG = Path("config/owners.local.yaml")
@@ -23,20 +24,55 @@ def build_parser() -> argparse.ArgumentParser:
     sync.add_argument("--in-place", action="store_true", help="Overwrite --workbook instead of writing a new file")
     sync.add_argument("--owners-config", default=str(DEFAULT_OWNERS_CONFIG), help="Path to local owners config (gitignored)")
     sync.add_argument("--categories-config", default=str(DEFAULT_CATEGORIES_CONFIG), help="Path to category mapping config")
+    sync.add_argument("--notify", action="store_true", help="Email a summary on success, or an alert on failure (Gmail credentials must be saved first)")
+
+    sub.add_parser("test-email", help="Send a test email to confirm Gmail alerting is configured correctly")
 
     return parser
 
 
 def run_sync(args: argparse.Namespace) -> int:
-    outcome = sync_from_csv(
-        transactions_csv_path=args.transactions,
-        workbook_path=args.workbook,
-        owners_config_path=args.owners_config,
-        categories_config_path=args.categories_config,
-        output_path=args.output,
-        in_place=args.in_place,
-    )
+    try:
+        outcome = sync_from_csv(
+            transactions_csv_path=args.transactions,
+            workbook_path=args.workbook,
+            owners_config_path=args.owners_config,
+            categories_config_path=args.categories_config,
+            output_path=args.output,
+            in_place=args.in_place,
+        )
+    except Exception as e:
+        if args.notify:
+            _notify_failure(e)
+        raise
     _print_summary(outcome)
+    if args.notify:
+        _notify_success(outcome)
+    return 0
+
+
+def _notify_success(outcome: SyncOutcome) -> None:
+    try:
+        notifications.send_sync_success_email(outcome)
+        print("\nSummary emailed.")
+    except notifications.NotificationError as e:
+        print(f"\nWARNING: could not send summary email: {e}", file=sys.stderr)
+
+
+def _notify_failure(error: Exception) -> None:
+    try:
+        notifications.send_sync_failure_email(error)
+    except notifications.NotificationError as e:
+        print(f"WARNING: could not send failure email: {e}", file=sys.stderr)
+
+
+def run_test_email(args: argparse.Namespace) -> int:
+    try:
+        notifications.send_test_email()
+    except notifications.NotificationError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    print("Test email sent.")
     return 0
 
 
@@ -78,6 +114,8 @@ def main(argv: list[str] | None = None) -> int:
         except (FileNotFoundError, ValueError) as e:
             print(f"Error: {e}", file=sys.stderr)
             return 1
+    if args.command == "test-email":
+        return run_test_email(args)
     parser.print_help()
     return 1
 
