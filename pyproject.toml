@@ -1,0 +1,26 @@
+[project]
+name = "monarch-account-summary"
+version = "0.1.0"
+description = "Sync Monarch Money transactions into a household budget workbook, split by owner."
+requires-python = ">=3.10"
+dependencies = [
+    "openpyxl>=3.1",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0",
+    "monarchmoney>=0.1.13",
+    "keyring>=25.0",
+    "streamlit>=1.38",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+monarch-summary = "monarch_summary.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

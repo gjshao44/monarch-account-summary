@@ -1,0 +1,14 @@
+azs:
+  monarch_owner_names:
+    - "Alex Test"
+
+ssp:
+  monarch_owner_names:
+    - "Bailey Test"
+
+shared_owner_names:
+  - "Shared"
+
+shared_split:
+  azs: 0.5
+  ssp: 0.5

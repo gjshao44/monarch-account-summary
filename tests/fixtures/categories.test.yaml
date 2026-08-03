@@ -1,0 +1,8 @@
+mapping:
+  Restaurants: Restaurants
+  Public Transit: Public Transport
+  Income: Income
+  Groceries: Groceries
+  Fitness: Fitness
+  Business Expenses: Misc
+  Transfer: null

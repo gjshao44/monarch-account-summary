@@ -1,0 +1,14 @@
+# Real financial data / PII — never commit
+expense_data/
+config/owners.local.yaml
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+build/
+dist/

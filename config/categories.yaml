@@ -1,0 +1,46 @@
+# Maps a Monarch Money transaction category to the "Label" column used by the
+# Data_AZS / Data_SSP tabs of the budget workbook. The workbook's Monthly_*
+# sheets total spending/income by doing an exact-string SUMIFS against this
+# Label column, so a category that maps to `null` here is intentionally
+# invisible to every rollup (used for internal money movement that is
+# neither income nor spend, e.g. transfers into a brokerage account).
+#
+# Contains no personal data — safe to commit. Edit freely as your own
+# Monarch categories evolve; unrecognized categories are reported by the CLI
+# instead of being silently dropped.
+
+mapping:
+  # Direct 1:1 matches with the workbook's Label taxonomy
+  Rent: Rent
+  Utilities: Utilities
+  Furnishings: Furnishings
+  Restaurants: Restaurants
+  Groceries: Groceries
+  Snacks/Other: Snacks/Other
+  Clothes: Clothes
+  Upkeep: Upkeep
+  Fitness: Fitness
+  Healthcare: Healthcare
+  Travel Costs: Travel Costs
+  Taxi: Taxi
+  Gifts: Gifts
+  Income: Income
+  Technology: Technology
+  Moving: Moving
+  Entertainment: Entertainment
+  Education: Education
+
+  # Monarch spelling differs from the workbook's label
+  Public Transit: Public Transport
+
+  # Real income, no dedicated Monarch category for it
+  Interest Income and Capital Gains: Income
+
+  # Real spend with no dedicated bucket -> falls into the Entertainment/Misc rollup
+  Business Expenses: Misc
+  Financial Fees: Misc
+  Supplies: Misc
+
+  # Internal money movement, not spend or income -> excluded from every rollup
+  Transfer: null
+  Investment: null
