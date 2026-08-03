@@ -21,7 +21,7 @@ If Windows shows a warning like *"running scripts is disabled on this system"* o
 
 ## 3. Add your private config file
 
-`config\owners.local.yaml` maps real names to the AZS/SSP codes used everywhere else — it's never included in the code (that's intentional, so real names never end up on GitHub). I'll send you this file directly (not through GitHub).
+`config\owners.local.yaml` maps real names to the AZS/SSP codes used everywhere else — it's never included in the code (that's intentional, so real names never end up on GitHub). 
 
 Drop it into the `config` folder inside your extracted project, replacing whatever's there — e.g.:
 ```
