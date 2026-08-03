@@ -120,7 +120,32 @@ if ((-not (Test-Path $ownersLocal)) -and (Test-Path $ownersExample)) {
 }
 
 # ---------------------------------------------------------------------------
-# 5. Desktop shortcut that launches the app with one double-click
+# 5. Create expense_data folders so they're visibly ready to use. "input" is
+#    where the budget workbook (and a CSV export, if not using live fetch)
+#    has to be placed manually -- this is real financial data, so it's
+#    gitignored and never ships in the repo/zip; nothing can pre-populate it.
+# ---------------------------------------------------------------------------
+$inputDir = Join-Path $ProjectDir "expense_data\input"
+$outputDir = Join-Path $ProjectDir "expense_data\output"
+New-Item -ItemType Directory -Force -Path $inputDir | Out-Null
+New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
+
+$readmePath = Join-Path $inputDir "PUT_YOUR_FILES_HERE.txt"
+if (-not (Test-Path $readmePath)) {
+    @"
+Put your budget workbook (.xlsx) here -- e.g. "2026 Spending.xlsx".
+
+If syncing from a CSV export instead of "Fetch live from Monarch" in the
+app, put the Monarch transactions CSV export here too.
+
+This folder holds real financial data. It's excluded from git and never
+included in a downloaded zip -- these files have to be placed here by hand
+on each machine that runs the app.
+"@ | Out-File -FilePath $readmePath -Encoding utf8
+}
+
+# ---------------------------------------------------------------------------
+# 6. Desktop shortcut that launches the app with one double-click
 # ---------------------------------------------------------------------------
 $desktop = [System.Environment]::GetFolderPath("Desktop")
 $shortcutPath = Join-Path $desktop "Monarch Account Summary.lnk"
@@ -139,3 +164,4 @@ Write-Host "== Setup complete ==" -ForegroundColor Green
 Write-Host "A 'Monarch Account Summary' shortcut was added to your Desktop."
 Write-Host "Double-click it to launch the app -- it opens in your browser, no terminal needed."
 Write-Host "First time in the app: open Settings and save Monarch credentials (and Gmail, if you want email alerts)."
+Write-Host "Also: put your budget workbook .xlsx (and CSV export, if not using live fetch) into expense_data\input -- see the note left in that folder."
