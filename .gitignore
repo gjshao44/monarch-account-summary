@@ -1,5 +1,6 @@
 # Real financial data / PII — never commit
 expense_data/
+config/owners.local.yaml
 .env
 
 # Monarch live-connector session cache — holds an auth token

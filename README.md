@@ -19,15 +19,11 @@ If Windows shows a warning like *"running scripts is disabled on this system"* o
 - Right-click `install.ps1` → **Properties** → check the **Unblock** box near the bottom → **OK**, then try again.
 - If that doesn't fix it, open PowerShell and run: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, then try again.
 
-## 3. Add your private config file
+## 3. Edit your private config file
 
-`config\owners.local.yaml` maps real names to the AZS/SSP codes used everywhere else — it's never included in the code (that's intentional, so real names never end up on GitHub). 
+`config\owners.local.yaml` maps real names to the AZS/SSP codes used everywhere else. The installer already created it for you (from a template) with placeholder names — open it in Notepad and replace `REPLACE_WITH_PERSON_1_NAME` / `REPLACE_WITH_PERSON_2_NAME` with the exact `Owner` values from your Monarch account.
 
-Drop it into the `config` folder inside your extracted project, replacing whatever's there — e.g.:
-```
-<your extracted folder>\config\owners.local.yaml
-```
-(If you ran the installer first, it will have already created a placeholder file with fake names at that path — just overwrite it.)
+This file is intentionally excluded from the code (so real names never end up on GitHub), and from every future update too — once you've edited it, downloading a newer version of the app later will never touch or overwrite your edits, since this file was never part of what gets downloaded in the first place.
 
 ## 4. Add your budget workbook
 
