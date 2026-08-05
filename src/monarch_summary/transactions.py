@@ -40,8 +40,17 @@ class ParseResult:
     skipped_blank_amount: int
 
 
+_DATE_FORMATS = ["%Y-%m-%d", "%m/%d/%y"]
+
+
 def _parse_date(raw: str) -> date:
-    return datetime.strptime(raw.strip(), "%m/%d/%y").date()
+    raw = raw.strip()
+    for fmt in _DATE_FORMATS:
+        try:
+            return datetime.strptime(raw, fmt).date()
+        except ValueError:
+            continue
+    raise ValueError(f"Unrecognized date format: {raw!r}")
 
 
 def _build_notes(original_statement: str, notes: str) -> str:

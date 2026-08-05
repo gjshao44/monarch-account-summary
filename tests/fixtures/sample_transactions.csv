@@ -1,11 +1,11 @@
 Date,Merchant,Category,Account,Original Statement,Notes,Amount,Tags,Owner,Reviewed
-1/2/26,Coffee Shop,Restaurants,Test Card,COFFEE SHOP NYC,,-12.50,,Alex Test,Reviewed
-1/3/26,Metro,Public Transit,Test Card,METRO FARE,,-3.00,,Alex Test,Reviewed
-1/4/26,Paycheck,Income,Test Checking,,,3000.00,,Alex Test,Reviewed
-1/5/26,Grocer,Groceries,Test Card2,GROCER NYC,,-88.20,,Bailey Test,Reviewed
-1/6/26,Gym,Fitness,Test Card2,,,-40.00,,Bailey Test,Reviewed
-1/7/26,Consulting Fee,Business Expenses,Test Card,,,-15.00,,Alex Test,Needs Review
-1/8/26,Broker Transfer,Transfer,Test Checking,,,-500.00,,Alex Test,Needs Review
-1/9/26,Dinner,Restaurants,Shared Card,,,-60.00,,Shared,Needs Review
-1/10/26,Pending Charge,Restaurants,Test Card,,,,,Alex Test,Needs Review
-1/11/26,Mystery,Weird Category,Test Card,,,-10.00,,Alex Test,Needs Review
+2026-01-02,Coffee Shop,Restaurants,Test Card,COFFEE SHOP NYC,,-12.50,,Alex Test,Reviewed
+2026-01-03,Metro,Public Transit,Test Card,METRO FARE,,-3.00,,Alex Test,Reviewed
+2026-01-04,Paycheck,Income,Test Checking,,,3000.00,,Alex Test,Reviewed
+2026-01-05,Grocer,Groceries,Test Card2,GROCER NYC,,-88.20,,Bailey Test,Reviewed
+2026-01-06,Gym,Fitness,Test Card2,,,-40.00,,Bailey Test,Reviewed
+2026-01-07,Consulting Fee,Business Expenses,Test Card,,,-15.00,,Alex Test,Needs Review
+2026-01-08,Broker Transfer,Transfer,Test Checking,,,-500.00,,Alex Test,Needs Review
+2026-01-09,Dinner,Restaurants,Shared Card,,,-60.00,,Shared,Needs Review
+2026-01-10,Pending Charge,Restaurants,Test Card,,,,,Alex Test,Needs Review
+2026-01-11,Mystery,Weird Category,Test Card,,,-10.00,,Alex Test,Needs Review

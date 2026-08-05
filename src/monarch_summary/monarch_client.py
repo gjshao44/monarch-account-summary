@@ -37,7 +37,17 @@ async def _fetch_transactions_async(
     email: str, password: str, mfa_secret_key: str | None, start_date: str | None, end_date: str | None
 ) -> list[Transaction]:
     mm = MonarchMoney()
-    await mm.login(email=email, password=password, mfa_secret_key=mfa_secret_key)
+    # use_saved_session=False: a cached session on disk is never validated before
+    # use, so a stale/expired one gets silently reused and only fails later with a
+    # confusing 401 on the first real API call. Always authenticate fresh with the
+    # credentials the user just provided.
+    await mm.login(
+        email=email,
+        password=password,
+        mfa_secret_key=mfa_secret_key,
+        use_saved_session=False,
+        save_session=False,
+    )
 
     raw = await mm.get_transactions(limit=10_000, start_date=start_date, end_date=end_date)
     results = raw.get("allTransactions", {}).get("results", []) if isinstance(raw, dict) else []
