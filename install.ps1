@@ -13,6 +13,21 @@ $ErrorActionPreference = "Stop"
 $ProjectDir = $PSScriptRoot
 Set-Location $ProjectDir
 
+# Double-clicking "Run with PowerShell" closes the console window the instant
+# the script exits, so any error printed right before a failing exit is
+# invisible unless we pause first. Route every failure through this so
+# there's always a chance to read what went wrong.
+function Exit-Install {
+    param([string]$Message)
+    Write-Host ""
+    Write-Host $Message -ForegroundColor Red
+    Write-Host ""
+    Read-Host "Press Enter to close this window"
+    exit 1
+}
+
+try {
+
 Write-Host "== Monarch Account Summary setup ==" -ForegroundColor Cyan
 
 # ---------------------------------------------------------------------------
@@ -54,20 +69,29 @@ if (-not $python) {
         # newest-first and fall back if the newest isn't in the catalog yet.
         $pythonWingetIds = @("Python.Python.3.14", "Python.Python.3.13", "Python.Python.3.12")
         $installed = $false
+        $wingetLog = @()
         foreach ($id in $pythonWingetIds) {
-            & winget install --id $id -e --silent --accept-package-agreements --accept-source-agreements
-            if ($?) {
+            $output = & winget install --id $id -e --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-String
+            $wingetLog += "--- winget install --id $id (exit code $LASTEXITCODE) ---`n$output"
+            if ($LASTEXITCODE -eq 0) {
                 $installed = $true
                 break
             }
         }
         if (-not $installed) {
-            Write-Host "winget install failed. Please install Python 3.10+ manually from https://python.org/downloads and re-run this script." -ForegroundColor Red
-            exit 1
+            Exit-Install (
+                "winget install failed for every Python version tried. Please install Python " +
+                "3.10+ manually from https://python.org/downloads (check 'Add python.exe to PATH' " +
+                "during install) and re-run this script.`n`n" +
+                "winget output, for troubleshooting:`n" + ($wingetLog -join "`n")
+            )
         }
     } else {
-        Write-Host "winget is not available on this machine. Please install Python 3.10+ manually from https://python.org/downloads (check 'Add python.exe to PATH' during install) and re-run this script." -ForegroundColor Red
-        exit 1
+        Exit-Install (
+            "winget is not available on this machine. Please install Python 3.10+ manually from " +
+            "https://python.org/downloads (check 'Add python.exe to PATH' during install) and " +
+            "re-run this script."
+        )
     }
 
     # winget updates PATH for new processes, but this running process still has
@@ -78,8 +102,10 @@ if (-not $python) {
 
     $python = Get-UsablePython
     if (-not $python) {
-        Write-Host "Python was installed but this window can't see it yet. Close this window, open a new PowerShell prompt, and re-run .\install.ps1." -ForegroundColor Red
-        exit 1
+        Exit-Install (
+            "Python was installed but this window can't see it yet. Close this window, open a " +
+            "new PowerShell prompt, and re-run .\install.ps1."
+        )
     }
 }
 
@@ -105,8 +131,7 @@ Write-Host "Installing dependencies (this can take a minute)..." -ForegroundColo
 & $venvPython -m pip install --upgrade pip --quiet
 & $venvPython -m pip install -e . --quiet
 if (-not $?) {
-    Write-Host "Dependency install failed -- see errors above." -ForegroundColor Red
-    exit 1
+    Exit-Install "Dependency install failed -- see errors above."
 }
 
 # ---------------------------------------------------------------------------
@@ -165,3 +190,7 @@ Write-Host "A 'Monarch Account Summary' shortcut was added to your Desktop."
 Write-Host "Double-click it to launch the app -- it opens in your browser, no terminal needed."
 Write-Host "First time in the app: open Settings and save Monarch credentials (and Gmail, if you want email alerts)."
 Write-Host "Also: put your budget workbook .xlsx (and CSV export, if not using live fetch) into expense_data\input -- see the note left in that folder."
+
+} catch {
+    Exit-Install "Setup failed with an unexpected error: $_"
+}
