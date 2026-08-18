@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import glob
 import tempfile
+import traceback
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -23,6 +25,13 @@ from monarch_summary.pipeline import SyncOutcome, sync_from_csv, sync_from_trans
 
 DEFAULT_OWNERS_CONFIG = "config/owners.local.yaml"
 DEFAULT_CATEGORIES_CONFIG = "config/categories.yaml"
+ERROR_LOG_PATH = "sync_error.log"
+
+
+def _log_exception(e: Exception) -> None:
+    with open(ERROR_LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(f"\n--- {datetime.now().isoformat()} ---\n")
+        f.write(traceback.format_exc())
 
 st.set_page_config(page_title="Monarch Account Summary", page_icon="🔄")
 st.title("Monarch Account Summary")
@@ -262,13 +271,16 @@ if st.button("🔄 Sync Now", type="primary"):
                         transactions, workbook_path, DEFAULT_OWNERS_CONFIG, DEFAULT_CATEGORIES_CONFIG
                     )
             except (FileNotFoundError, ValueError, credentials.CredentialStoreUnavailable) as e:
-                st.error(f"Sync failed: {e}")
+                _log_exception(e)
+                st.error(f"Sync failed: {type(e).__name__}: {e}")
                 if email_results:
                     _try_notify_failure(e)
             except Exception as e:  # noqa: BLE001 -- live Monarch connector is unverified
+                _log_exception(e)
                 st.error(
                     "Sync failed with an unexpected error. The live Monarch connector "
-                    f"is unverified and this may be a gap in it: {e}"
+                    f"is unverified and this may be a gap in it: {type(e).__name__}: {e}\n\n"
+                    f"Full details were written to `{ERROR_LOG_PATH}` in the app folder."
                 )
                 if email_results:
                     _try_notify_failure(e)

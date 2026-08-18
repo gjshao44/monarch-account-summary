@@ -6,6 +6,9 @@ config/owners.local.yaml
 # Monarch live-connector session cache — holds an auth token
 .mm/
 
+# Local sync error tracebacks — may include account details
+sync_error.log
+
 # Python
 .venv/
 venv/
